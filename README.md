@@ -1,3 +1,6 @@
+# 小弟不才，第一次在GitHub上提交自己的代码，写的不好地方欢迎指正
+# @email pplin_1993@qq.com
+
 # rxbusdemo
 这是一个基于RxJava书写的RxBus事件流sdk
 
