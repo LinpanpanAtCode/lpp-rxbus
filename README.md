@@ -1,10 +1,35 @@
 # 小弟不才，第一次在GitHub上提交自己的代码，写的不好地方欢迎指正
+# 由于还没开通自己的maven库，这里先没给出maven以及gradle的引用方式
 # @email pplin_1993@qq.com
 
 # rxbusdemo
 这是一个基于RxJava书写的RxBus事件流sdk
 
 ## 实现了部分eventbus的事件总线的传输，线程的切换以及黏性事件的支持
+首先，在你的项目里面引入对RxJava/RxAndroid的支持
+
+```
+implementation "io.reactivex.rxjava3:rxandroid:3.0.0"
+```
+
+其次在你需要的项目里面依赖对应的lpprxbus module
+重新构建之后就可以使用啦~
+
+```
+    // 订阅一个事件
+    Disposable disposable = RxBus.getDefaultBus().registerEvent(new Consumer() {
+            @Override
+            public void accept(Object o) throws Throwable {
+                // TODO 在此处处理你的事件接收
+                Log.e(TAG,"normal event:" + o.toString());
+            }
+        });
+        
+    // 发送一个普通事件
+     RxBus.getDefaultBus().post("this is a normal rx bus data:" + i);
+     // 发送一个黏性事件
+     RxBus.getDefaultBus().postStick("this is a stick rx bus data:" + i);
+```
 
 具体使用如下：
 
