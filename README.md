@@ -16,7 +16,7 @@ implementation "io.reactivex.rxjava3:rxandroid:3.0.0"
 重新构建之后就可以使用啦~
 
 ```
-    // 订阅一个事件
+     // 订阅一个事件
      Disposable disposable =  RxBusDo.getDefaultBus().getRxRegister().registerEvent(new Consumer() {
                 @Override
                 public void accept(Object o) throws Throwable {
@@ -24,15 +24,27 @@ implementation "io.reactivex.rxjava3:rxandroid:3.0.0"
                 }
             });
         
-    // 发送一个普通事件
+     // 发送一个普通事件
      RxBusDo.getDefaultBus().getRxPoster().post("this is a normal rx bus data");
      // 发送一个黏性事件
      RxBusDo.getDefaultBus().getRxPoster().postStick("this is a stick rx bus data");
+
+     // 记得在你的onDestroy里面取消事件的订阅
+     public void onDestroy(){
+        if(disposable != null) disposable.dispose();
+     }
 ```
 
 具体使用如下：
 
 ```
+
+    /**
+     * 使用构建者注册一个eventBus
+     * @param eventBuilder
+     */
+    public Disposable registerEvent(IRxPostBuilder eventBuilder);
+
     /**
      * 注册一个事件
      * 默认的响应事件发生在订阅的同一线程线
@@ -182,18 +194,8 @@ implementation "io.reactivex.rxjava3:rxandroid:3.0.0"
     public void removeStickEvent(@NonNull Object stickEvent);
 
     /**
-     * 清楚所有的黏性事件流
+     * 清除所有的黏性事件流
      */
     public void clearAllStickEvents();
 
-    /**
-     * 使用构建者注册一个eventBus
-     * @param eventBuilder
-     */
-    public Disposable registerEvent(RxBusEventBuilder eventBuilder);
-    
-    // 记得在你的onDestroy里面取消事件的订阅
-    public void onDestroy(){
-      if(disposable != null) disposable.dispose();
-    }
 ```
