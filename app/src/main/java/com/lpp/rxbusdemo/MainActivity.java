@@ -7,13 +7,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.lpp.pprxbus.RxBus;
-import com.lpp.pprxbus.builder.RxBusEventBuilder;
+import com.lpp.pprxbus.rxbus.RxBusDo;
+import com.lpp.pprxbus.rxbus.build.IRxPostBuilder;
+import com.lpp.pprxbus.rxbus.build.RxPostBuilder;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.disposables.Disposable;
-import io.reactivex.rxjava3.functions.Action;
 import io.reactivex.rxjava3.functions.Consumer;
 
 public class MainActivity extends AppCompatActivity {
@@ -28,54 +27,43 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 int i = (int) (Math.random() * 100);
                 if (i / 2 == 0){
-                    RxBus.getDefaultBus().post("this is a normal rx bus data:" + i);
+                    RxBusDo.getDefaultBus().getRxPoster().post("this is a normal rx bus data:" + i);
                 }else{
-                    RxBus.getDefaultBus().postStick("this is a stick rx bus data:" + i);
+                    RxBusDo.getDefaultBus().getRxPoster().postStick("this is a stick rx bus data:" + i);
                 }
             }
         });
-        disposable = RxBus.getDefaultBus().registerEvent(new Consumer() {
+        disposable =  RxBusDo.getDefaultBus().getRxRegister().registerEvent(new Consumer() {
             @Override
             public void accept(Object o) throws Throwable {
                 Log.e(TAG,"normal event:" + o.toString());
             }
         });
-        disposableWithScheduler = RxBus.getDefaultBus().registerEventWithScheduler(new Consumer() {
+        disposableWithScheduler = RxBusDo.getDefaultBus().getRxRegister().registerEventWithScheduler(new Consumer() {
             @Override
             public void accept(Object o) throws Throwable {
                 Toast.makeText(MainActivity.this,"Scheduler event:" + o.toString(),Toast.LENGTH_LONG).show();
                 Log.e(TAG, "Scheduler event:" + o.toString() + ",Thread name:" + Thread.currentThread().getName());
             }
         }, AndroidSchedulers.mainThread());
-        disposableWithStick = RxBus.getDefaultBus().registerStickEvent(new Consumer() {
+        disposableWithStick = RxBusDo.getDefaultBus().getRxRegister().registerStickEvent(new Consumer() {
             @Override
             public void accept(Object o) throws Throwable {
                 Log.e(TAG,"stick event:" + o.toString());
             }
         });
-        RxBusEventBuilder rxBusEventBuilder = RxBusEventBuilder
-                .create()
-                .setConsumer(new Consumer() {
+
+        IRxPostBuilder rxPostBuilder = RxPostBuilder.create()
+                .setEvent(new Consumer() {
                     @Override
                     public void accept(Object o) throws Throwable {
-                        Log.e(TAG,"builder event:" + o.toString());
+                        Toast.makeText(MainActivity.this,"build poster",Toast.LENGTH_SHORT).show();
                     }
-                })
-                .setError(new Consumer() {
-                    @Override
-                    public void accept(Object o) throws Throwable {
-                        // TODO error
-                    }
-                })
-                .setComplete(new Action() {
-                    @Override
-                    public void run() throws Throwable {
-                        Log.e(TAG,"completer with builder");
-                    }
-                })
-                .setSubscribeOnWhichScheduler(AndroidSchedulers.mainThread())
-                .setStick(false);
-        disposableWithBuilder = RxBus.getDefaultBus().registerEvent(rxBusEventBuilder);
+                });
+        disposableWithBuilder = RxBusDo
+                .getDefaultBus()
+                .getRxRegister()
+                .registerEvent(rxPostBuilder);
     }
 
     @Override

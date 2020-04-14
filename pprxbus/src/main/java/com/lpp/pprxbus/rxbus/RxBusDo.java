@@ -1,12 +1,14 @@
-package com.lpp.pprxbus;
+package com.lpp.pprxbus.rxbus;
 
 
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-
-import com.lpp.pprxbus.base.BaseStickBus;
-import com.lpp.pprxbus.builder.RxBusEventBuilder;
+import com.lpp.pprxbus.base.ibuilder.IPostBuilder;
+import com.lpp.pprxbus.base.inter.IPostBus;
+import com.lpp.pprxbus.rxbus.build.IRxPostBuilder;
+import com.lpp.pprxbus.rxbus.build.RxPostBuilder;
+import com.lpp.pprxbus.rxbus.inter.IRxBusRegister;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,12 +27,16 @@ import io.reactivex.rxjava3.processors.PublishProcessor;
  *
  * @author linpanpan
  */
-public class RxBus extends BaseStickBus {
+public class RxBusDo extends RxBus implements IRxBusRegister<Consumer,Consumer,Disposable,Scheduler,Action>, IPostBus<Object> {
+    /**
+     * 用于保存黏性事件流
+     */
+    private ConcurrentHashMap<Object,Object> mStickEvents;
     private static final String TAG = "pp-rxBus";
     private FlowableProcessor<Object> mBus;
     private static volatile RxBus sRxBus = null;
 
-    private RxBus() {
+    private RxBusDo() {
         mBus = PublishProcessor.create().toSerialized();
     }
 
@@ -41,56 +47,65 @@ public class RxBus extends BaseStickBus {
      */
     public static RxBus getDefaultBus() {
         if (sRxBus == null) {
-            synchronized (RxBus.class) {
+            synchronized (RxBusDo.class) {
                 if (sRxBus == null) {
-                    sRxBus = new RxBus();
+                    sRxBus = new RxBusDo();
                 }
             }
         }
         return sRxBus;
     }
+    @Override
+    public IRxBusRegister getRxRegister(){
+        return this;
+    }
+
+    @Override
+    public IPostBus getRxPoster(){
+        return this;
+    }
 
     @Override
     public Disposable registerEvent(@NonNull Consumer consumer) {
-        RxBusEventBuilder eventBuilder = RxBusEventBuilder.create()
+        IRxPostBuilder eventBuilder = RxPostBuilder.create()
                 .setStick(false)
-                .setConsumer(consumer);
+                .setEvent(consumer);
         return registerEvent(eventBuilder);
     }
 
     @Override
     public Disposable registerEventWithScheduler(@NonNull Consumer consumer, Scheduler subscribeOnWhichScheduler) {
-        RxBusEventBuilder eventBuilder = RxBusEventBuilder.create()
+        IRxPostBuilder eventBuilder = RxPostBuilder.create()
                 .setStick(false)
-                .setConsumer(consumer)
-                .setSubscribeOnWhichScheduler(subscribeOnWhichScheduler);
+                .setEvent(consumer)
+                .setThreadMode(subscribeOnWhichScheduler);
         return registerEvent(eventBuilder);
     }
 
     @Override
     public Disposable registerEvent(@NonNull Consumer consumer, @NonNull Consumer error) {
-        RxBusEventBuilder eventBuilder = RxBusEventBuilder.create()
+        IRxPostBuilder eventBuilder = RxPostBuilder.create()
                 .setStick(false)
-                .setConsumer(consumer)
+                .setEvent(consumer)
                 .setError(error);
         return registerEvent(eventBuilder);
     }
 
     @Override
     public Disposable registerEventWithScheduler(@NonNull Consumer consumer, @NonNull Consumer error, Scheduler subscribeOnWhichScheduler) {
-        RxBusEventBuilder eventBuilder = RxBusEventBuilder.create()
+        IRxPostBuilder eventBuilder = RxPostBuilder.create()
                 .setStick(false)
-                .setConsumer(consumer)
+                .setEvent(consumer)
                 .setError(error)
-                .setSubscribeOnWhichScheduler(subscribeOnWhichScheduler);
+                .setThreadMode(subscribeOnWhichScheduler);
         return registerEvent(eventBuilder);
     }
 
     @Override
     public Disposable registerEvent(@NonNull Consumer consumer, @NonNull Consumer error, Action complete) {
-        RxBusEventBuilder eventBuilder = RxBusEventBuilder.create()
+        IRxPostBuilder eventBuilder = RxPostBuilder.create()
                 .setStick(false)
-                .setConsumer(consumer)
+                .setEvent(consumer)
                 .setError(error)
                 .setComplete(complete);
         return registerEvent(eventBuilder);
@@ -98,12 +113,12 @@ public class RxBus extends BaseStickBus {
 
     @Override
     public Disposable registerEventWithScheduler(@NonNull Consumer consumer, @NonNull Consumer error, @NonNull Action complete, Scheduler subscribeOnWhichScheduler) {
-        RxBusEventBuilder eventBuilder = RxBusEventBuilder.create()
+        IRxPostBuilder eventBuilder = RxPostBuilder.create()
                 .setStick(false)
-                .setConsumer(consumer)
+                .setEvent(consumer)
                 .setError(error)
                 .setComplete(complete)
-                .setSubscribeOnWhichScheduler(subscribeOnWhichScheduler);
+                .setThreadMode(subscribeOnWhichScheduler);
         return registerEvent(eventBuilder);
     }
 
@@ -116,45 +131,50 @@ public class RxBus extends BaseStickBus {
 
     @Override
     public Disposable registerStickEvent(@NonNull Consumer consumer) {
-        RxBusEventBuilder eventBuilder = RxBusEventBuilder.create()
+       IRxPostBuilder eventBuilder = RxPostBuilder.create()
                 .setStick(true)
-                .setConsumer(consumer);
+                .setEvent(consumer);
         return registerEvent(eventBuilder);
     }
 
     @Override
+    public Disposable registerEvent(@NonNull IPostBuilder postBuilder) {
+        return null;
+    }
+
+    @Override
     public Disposable registerStickEventWithScheduler(@NonNull Consumer consumer, Scheduler subscribeOnWhichScheduler) {
-        RxBusEventBuilder eventBuilder = RxBusEventBuilder.create()
+       IRxPostBuilder eventBuilder = RxPostBuilder.create()
                 .setStick(true)
-                .setConsumer(consumer)
-                .setSubscribeOnWhichScheduler(subscribeOnWhichScheduler);
+                .setEvent(consumer)
+               .setThreadMode(subscribeOnWhichScheduler);
         return registerEvent(eventBuilder);
     }
 
     @Override
     public Disposable registerStickEvent(@NonNull Consumer consumer, @NonNull Consumer error) {
-        RxBusEventBuilder eventBuilder = RxBusEventBuilder.create()
+       IRxPostBuilder eventBuilder = RxPostBuilder.create()
                 .setStick(true)
-                .setConsumer(consumer)
+                .setEvent(consumer)
                 .setError(error);
         return registerEvent(eventBuilder);
     }
 
     @Override
     public Disposable registerStickEventWithScheduler(@NonNull Consumer consumer, @NonNull Consumer error, Scheduler subscribeOnWhichScheduler) {
-        RxBusEventBuilder eventBuilder = RxBusEventBuilder.create()
+       IRxPostBuilder eventBuilder = RxPostBuilder.create()
                 .setStick(true)
-                .setConsumer(consumer)
+                .setEvent(consumer)
                 .setError(error)
-                .setSubscribeOnWhichScheduler(subscribeOnWhichScheduler);
+               .setThreadMode(subscribeOnWhichScheduler);
         return registerEvent(eventBuilder);
     }
 
     @Override
     public Disposable registerStickEvent(@NonNull Consumer consumer, @NonNull Consumer error, @NonNull Action complete) {
-        RxBusEventBuilder eventBuilder = RxBusEventBuilder.create()
+       IRxPostBuilder eventBuilder = RxPostBuilder.create()
                 .setStick(true)
-                .setConsumer(consumer)
+                .setEvent(consumer)
                 .setError(error)
                 .setComplete(complete);
         return registerEvent(eventBuilder);
@@ -162,11 +182,11 @@ public class RxBus extends BaseStickBus {
 
     @Override
     public Disposable registerStickEventWithScheduler(@NonNull Consumer consumer, @NonNull Consumer error, @NonNull Action complete, Scheduler subscribeOnWhichScheduler) {
-        RxBusEventBuilder eventBuilder = RxBusEventBuilder.create()
-                .setConsumer(consumer)
+       IRxPostBuilder eventBuilder = RxPostBuilder.create()
+                .setEvent(consumer)
                 .setError(error)
                 .setComplete(complete)
-                .setSubscribeOnWhichScheduler(subscribeOnWhichScheduler);
+               .setThreadMode(subscribeOnWhichScheduler);
         return registerEvent(eventBuilder);
     }
 
@@ -202,23 +222,22 @@ public class RxBus extends BaseStickBus {
     }
 
     @Override
-    public Disposable registerEvent(RxBusEventBuilder eventBuilder) {
+    public Disposable registerEvent(IRxPostBuilder eventBuilder) {
         Disposable disposable = null;
         if (eventBuilder == null) {
             return disposable;
         }
-        String eventName = eventBuilder.getEventName();
-        Consumer consumer = eventBuilder.getConsumer();
-        Consumer error = eventBuilder.getError();
-        Action complete = eventBuilder.getComplete();
-        Scheduler subscribeOnWhichScheduler = eventBuilder.getSubscribeOnWhichScheduler();
+        Consumer consumer = eventBuilder.getEvent();
+        Consumer error = eventBuilder.getErrorDo();
+        Action complete = eventBuilder.getCompleteDo();
+        Scheduler subscribeOnWhichScheduler = eventBuilder.getThreadMode();
         boolean isStick = eventBuilder.isStick();
         if (mBus == null) {
             Log.e(TAG, "rxbus init failed");
             return null;
         }
         if (consumer == null) {
-            Log.e(TAG, "cannot register a null consumer called {" + eventName + "} in rxbus line");
+            Log.e(TAG, "cannot register a null consumer in rxbus line");
             return null;
         }
         // 如果是有设置事件回调线程，则切换至回调线程
@@ -258,12 +277,10 @@ public class RxBus extends BaseStickBus {
         return false;
     }
 
-
     @Override
     public Observable toObservable() {
         return mBus == null ? null : mBus.toObservable();
     }
-
     @Override
     public Flowable toFlowable() {
         return mBus;
