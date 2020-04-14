@@ -17,18 +17,17 @@ implementation "io.reactivex.rxjava3:rxandroid:3.0.0"
 
 ```
     // 订阅一个事件
-    Disposable disposable = RxBus.getDefaultBus().registerEvent(new Consumer() {
-            @Override
-            public void accept(Object o) throws Throwable {
-                // TODO 在此处处理你的事件接收
-                Log.e(TAG,"normal event:" + o.toString());
-            }
-        });
+     Disposable disposable =  RxBusDo.getDefaultBus().getRxRegister().registerEvent(new Consumer() {
+                @Override
+                public void accept(Object o) throws Throwable {
+                    Log.e(TAG,"normal event:" + o.toString());
+                }
+            });
         
     // 发送一个普通事件
-     RxBus.getDefaultBus().post("this is a normal rx bus data:" + i);
+     RxBusDo.getDefaultBus().getRxPoster().post("this is a normal rx bus data");
      // 发送一个黏性事件
-     RxBus.getDefaultBus().postStick("this is a stick rx bus data:" + i);
+     RxBusDo.getDefaultBus().getRxPoster().postStick("this is a stick rx bus data");
 ```
 
 具体使用如下：
