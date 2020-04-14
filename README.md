@@ -1,7 +1,7 @@
 # 第一次在GitHub上提交自己的代码，写的不好地方欢迎指正
 # 由于还没开通自己的maven库，这里先没给出maven以及gradle的引用方式
 # @email pplin_1993@qq.com
-# linpanpan
+# linpanpan~~
 
 # rxbusdemo
 这是一个基于RxJava书写的RxBus事件流sdk
